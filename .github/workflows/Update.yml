@@ -1,0 +1,36 @@
+name: Update 
+
+on:
+  push:
+  schedule:
+    - cron: 0 */30 * * *
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Update
+      run: |
+        #IPV6
+        rm -f ipv6.m3u && wget https://raw.githubusercontent.com/fanmingming/live/main/tv/m3u/ipv6.m3u -O IPV6.m3u
+        # 整合源
+        rm -f IPTV.m3u && touch IPTV.m3u
+        cat IPV6.m3u >> IPTV.m3u
+        #cat MIGU.m3u >> IPTV.m3u
+        sed -i 's|https://live.fanmingming.com/e.xml|https://raw.githubusercontent.com/waynesg/live/main/EPG.xml|g' IPTV.m3u
+        #sed -i '/#EXTM3U/d' IPTV.m3u
+        #sed -i '1i #EXTM3U' IPTV.m3u
+        sed -i '/^\s*$/d' IPTV.m3u
+        # 节目源
+        rm -f EPG.xml && wget https://raw.githubusercontent.com/fanmingming/live/main/e.xml -O EPG.xml
+        # 重置库并上传
+        echo `date +"%Y-%m-%d %H:%M:%S"` Finish > README.md
+        git config --global user.email "820910@qq.com"
+        git config --global user.name "waynesg"
+        git checkout --orphan latest_branch
+        git add -A
+        git commit -am "Update"
+        git branch -D main
+        git branch -m main
+        git push -f origin main
